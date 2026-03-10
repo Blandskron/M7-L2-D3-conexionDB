@@ -1,0 +1,35 @@
+openapi: 3.0.0
+info:
+  title: Librería API Django
+  description: API para gestión de libros y autores con respuestas JSON.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api
+    description: Servidor local de desarrollo
+paths:
+  /libros/:
+    get:
+      summary: Listar todos los libros
+      responses:
+        '200':
+          description: Una lista de libros en formato JSON
+  /libros/{id}/:
+    get:
+      summary: Detalle de un libro específico
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Datos del libro solicitado
+        '404':
+          description: Libro no encontrado
+  /autores/:
+    get:
+      summary: Listar todos los autores
+      responses:
+        '200':
+          description: Una lista de autores en formato JSON
