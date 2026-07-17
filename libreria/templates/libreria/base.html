@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Librería Django{% endblock %}</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#243043}nav a{margin-right:1rem}table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{border:1px solid #ccd3dc;padding:.6rem;text-align:left}input,textarea{display:block;width:100%;max-width:32rem;padding:.5rem;margin:.25rem 0 1rem;box-sizing:border-box}input[type=checkbox]{display:inline;width:auto}button,.boton{display:inline-block;background:#2855a6;color:#fff;border:0;padding:.55rem .85rem;text-decoration:none;border-radius:4px}.peligro{background:#a62c2c}.errorlist{color:#a62c2c}
+  </style>
+</head>
+<body>
+  <nav><a href="{% url 'inicio' %}">Inicio</a><a href="{% url 'producto_lista' %}">Productos</a><a href="{% url 'lista_libros' %}">API libros</a><a href="/admin/">Administración</a></nav>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,2 @@
+{% extends 'libreria/base.html' %}
+{% block content %}<h1>Eliminar producto</h1><p>¿Confirma que desea eliminar “{{ producto.nombre }}”?</p><form method="post">{% csrf_token %}<button class="peligro" type="submit">Sí, eliminar</button> <a href="{% url 'producto_detalle' producto.pk %}">Cancelar</a></form>{% endblock %}

@@ -1,0 +1,6 @@
+{% extends 'libreria/base.html' %}
+{% block content %}
+<h1>Demostración del ORM de Django</h1>
+<p>Este proyecto usa PostgreSQL y permite demostrar operaciones CRUD sobre una entidad independiente.</p>
+<a class="boton" href="{% url 'producto_lista' %}">Administrar productos</a>
+{% endblock %}

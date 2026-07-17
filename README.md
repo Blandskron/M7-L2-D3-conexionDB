@@ -1,144 +1,77 @@
-# Tutorial: Creación de API de Librería con Django (JSON)
+# Librería educativa con Django y PostgreSQL
 
-Este tutorial guía el proceso de creación de una aplicación Django para gestionar **Autores** y **Libros** con una relación de uno a muchos, diseñada para responder exclusivamente en formato JSON.
+Proyecto simple para demostrar la conexión de Django a PostgreSQL, el ORM, entidades sin relaciones, claves primarias y operaciones CRUD.
 
-## 1. Configuración del Entorno y Proyecto
+## Ejecución con Docker
 
-Ejecuta los siguientes comandos en tu terminal para preparar el entorno:
-
-```bash
-python -m venv venv
-source venv/Scripts/activate  # En Windows: venv\Scripts\activate
-pip install django
-django-admin startproject proyecto .
-django-admin startapp libreria
-
-```
-
-## 2. Definición de Modelos (`models.py`)
-
-Define la estructura de datos en `libreria/models.py`:
-
-```python
-from django.db import models
-
-class Autor(models.Model):
-    nombre = models.CharField(max_length=100)
-    biografia = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.nombre
-
-class Libro(models.Model):
-    titulo = models.CharField(max_length=200)
-    fecha_publicacion = models.DateField()
-    isbn = models.CharField(max_length=13, unique=True)
-    autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name='libros')
-
-    def __str__(self):
-        return self.titulo
-
-```
-
-## 3. Vistas JSON (`views.py`)
-
-Configura las respuestas automáticas en formato JSON en `libreria/views.py`:
-
-```python
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import Libro, Autor
-
-def lista_libros(request):
-    libros = list(Libro.objects.values('id', 'titulo', 'fecha_publicacion', 'isbn', 'autor__nombre'))
-    return JsonResponse({'libros': libros}, safe=False)
-
-def detalle_libro(request, pk):
-    libro = get_object_or_404(Libro, pk=pk)
-    data = {
-        'id': libro.id,
-        'titulo': libro.titulo,
-        'fecha_publicacion': libro.fecha_publicacion,
-        'isbn': libro.isbn,
-        'autor': libro.autor.nombre
-    }
-    return JsonResponse(data)
-
-def lista_autores(request):
-    autores = list(Autor.objects.values('id', 'nombre', 'biografia'))
-    return JsonResponse({'autores': autores}, safe=False)
-
-```
-
-## 4. Configuración de Rutas (`urls.py`)
-
-Crea el archivo `libreria/urls.py` y conéctalo:
-
-```python
-from django.urls import path
-from . import views
-
-urlpatterns = [
-    path('libros/', views.lista_libros, name='lista_libros'),
-    path('libros/<int:pk>/', views.detalle_libro, name='detalle_libro'),
-    path('autores/', views.lista_autores, name='lista_autores'),
-]
-
-```
-
-*Nota: No olvides incluir `path('', include('libreria.urls'))` en el `urls.py` principal del proyecto.*
-
-## 5. Migraciones y Base de Datos
-
-Aplica los cambios a la base de datos:
+El único requisito es Docker. Desde la raíz del proyecto:
 
 ```bash
-python manage.py makemigrations
-python manage.py migrate
-python manage.py createsuperuser
-
+docker compose up --build
 ```
 
-## 6. Carga de Datos Iniciales (`seed_info.py`)
+Luego abre:
 
-Crea un archivo en la raíz llamado `seed_info.py` para poblar la base de datos automáticamente con 10 libros y 5 autores:
+- Aplicación y explicación: http://localhost:8000/
+- CRUD de productos: http://localhost:8000/productos/
+- API de libros: http://localhost:8000/api/libros/
+- Administración: http://localhost:8000/admin/
+
+Credenciales educativas del administrador: usuario `admin`, contraseña `admin1234`.
+
+El contenedor espera a PostgreSQL y, cada vez que inicia, aplica migraciones, crea o actualiza el superusuario, carga datos de demostración de forma idempotente, recopila estáticos e inicia Django.
+
+Para detenerlo:
+
+```bash
+docker compose down
+```
+
+Para eliminar también los datos persistidos y comenzar desde cero:
+
+```bash
+docker compose down -v
+```
+
+## Requisitos demostrados
+
+- PostgreSQL configurado mediante variables de entorno en `proyecto/settings.py` y servicio `db` en Compose.
+- `psycopg2-binary` declarado como controlador en `requirements.txt`.
+- `Producto`: entidad independiente con campos de texto, decimal, entero positivo, booleano y fecha automática; usa `sku` como clave primaria simple y explícita.
+- `ExistenciaSucursal`: entidad independiente con `CompositePrimaryKey` sobre `codigo_sucursal` y `sku_producto`.
+- CRUD completo de `Producto`: crear, listar/leer, actualizar y eliminar mediante formularios, vistas, URLs y templates de Django.
+- Validación de precio positivo, panel administrativo, datos iniciales y pruebas automatizadas.
+- `Autor` y `Libro` conservan la funcionalidad original y sus endpoints JSON bajo `/api/`.
+
+> Django no permite registrar modelos con `CompositePrimaryKey` en el panel admin. La clave compuesta se demuestra en el modelo, la migración, los datos iniciales y las pruebas; `Producto`, `Autor` y `Libro` sí están registrados en admin.
+
+## Operaciones ORM para una demostración
+
+```bash
+docker compose exec web python manage.py shell
+```
 
 ```python
-# Ejecutar con: python seed_info.py
-import os, django, random
-from datetime import date
+from libreria.models import Producto
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proyecto.settings')
-django.setup()
-
-from libreria.models import Autor, Libro
-
-# Lógica de creación de objetos...
-# (Copia aquí el código de seed proporcionado anteriormente)
-
+# Crear
+p = Producto.objects.create(sku="DEM-001", nombre="Producto demo", precio=1000, stock=5)
+# Leer
+p = Producto.objects.get(pk="DEM-001")
+# Actualizar
+p.stock = 8
+p.save()
+# Borrar
+p.delete()
 ```
 
-## 7. Gestión vía Shell
+## Verificación
 
-Para añadir 10 libros más o realizar consultas rápidas, usa la terminal de Django:
+Con los servicios activos:
 
 ```bash
-python manage.py shell
-
+docker compose exec web python manage.py check
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py test
+docker compose config
 ```
-
-**Comandos útiles:**
-
-* `Libro.objects.all()`: Ver todos los libros.
-* `Libro.objects.filter(titulo__icontains="amor")`: Buscar por palabra clave.
-
-## 8. Ejecución
-
-Inicia el servidor de desarrollo:
-
-```bash
-python manage.py runserver
-
-```
-
-Accede a `http://127.0.0.1:8000/libros/` para ver los resultados en JSON.
